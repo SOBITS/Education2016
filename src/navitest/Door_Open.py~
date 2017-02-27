@@ -1,0 +1,29 @@
+#!/usr/bin/env python
+import rospy
+from std_msgs.msg import Float64
+from sensor_msgs.msg import LaserScan
+
+def depthCallback(data):
+
+	laser = data
+	center = laser.ranges[320]
+
+	if center > 2:
+		judge_DoorOpen = 1
+		print "Robot had recognized the door was opened."
+	else:
+		print "Robot is waiting for opening the door."
+
+rospy.init_node('DoorOpen')
+print 'Door_Open node START'
+
+judge_DoorOpen = 0
+
+scan_sub = rospy.Subscriber('scan',LaserScan,depthCallback)
+
+if judge_DoorOpen == 1:
+	judge_pub = rospy.Publisher('judge_DoorOpen',Float64)
+	judge_pub.publish(judge_DoorOpen)
+else
+	pass
+rospy.spin()

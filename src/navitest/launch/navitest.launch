@@ -1,0 +1,84 @@
+<launch>
+<!--***************follower-->
+	<arg name="simulation" default="false"/>
+	<group unless="$(arg simulation)"> <!-- Real robot -->
+		<include file="$(find turtlebot_follower)/launch/includes/velocity_smoother.launch.xml"/>
+		<include file="$(find turtlebot_follower)/launch/includes/safety_controller.launch.xml"/>
+
+		<param name="camera/rgb/image_color/compressed/jpeg_quality" value="22"/>
+
+    <!-- Make a slower camera feed available; only required if we use android client -->
+		<node pkg="topic_tools" type="throttle" name="camera_throttle"
+			args="messages camera/rgb/image_color/compressed 5"/>
+
+  <!--  Load turtlebot follower into the 3d sensors nodelet manager to avoid pointcloud serializing -->
+		<node pkg="nodelet" type="nodelet" name="turtlebot_follower"
+          args="load turtlebot_follower/TurtlebotFollower camera/camera_nodelet_manager">
+		<remap from="turtlebot_follower/cmd_vel" to="follower_velocity_smoother/raw_cmd_vel"/>
+		<remap from="depth/points" to="camera/depth/points"/>
+			<param name="enabled" value="true" />
+			<param name="x_scale" value="7.0" />
+			<param name="z_scale" value="3.0" />
+			<param name="min_x" value="-0.25" />
+			<param name="max_x" value="0.25" />
+			<param name="min_y" value="0.1" />
+			<param name="max_y" value="0.5" />
+			<param name="max_z" value="1.5" />
+			<param name="goal_z" value="0.6" />
+		</node>
+	</group>
+
+<!--***************amcl-->
+	<arg name="custom_param_file" default="$(find turtlebot_navigation)/param/dummy.yaml"/>
+	<include file="$(find turtlebot_bringup)/launch/3dsensor.launch">
+		<arg name="rgb_processing" value="false" />
+		<arg name="depth_registration" value="false" />
+		<arg name="depth_processing" value="true" />
+		<arg name="scan_processing" value="true" />
+	<!-- We must specify an absolute topic name because if not it will be prefixed by "$(arg camera)".
+         Probably is a bug in the nodelet manager: https://github.com/ros/nodelet_core/issues/7 --> 
+		<arg name="scan_topic" value="/xtion_scan" />
+	</include>
+
+<!--***************map server-->
+	<arg name="map_file" default="$(env TURTLEBOT_MAP_FILE)"/>
+	<node name="map_server" pkg="map_server" type="map_server" args="$(arg map_file)" />
+
+	<arg name="initial_pose_x" default="0.0"/>  <!-- Use 17.0 for willow's map in simulation -->
+	<arg name="initial_pose_y" default="0.0"/>  <!-- Use 17.0 for willow's map in simulation -->
+	<arg name="initial_pose_a" default="0.0"/>
+	<include file="$(find turtlebot_navigation)/launch/includes/amcl.launch.xml">
+		<arg name="initial_pose_x" value="$(arg initial_pose_x)"/>
+		<arg name="initial_pose_y" value="$(arg initial_pose_y)"/>
+		<arg name="initial_pose_a" value="$(arg initial_pose_a)"/>
+		<arg name="scan_topic" value="scan_filtered" />
+	</include>
+
+	<node name="laser_filters" pkg="laser_filters" type="scan_to_scan_filter_chain" />
+
+	<include file="$(find turtlebot_navigation)/launch/includes/move_base.launch.xml">
+		<arg name="custom_param_file" value="$(arg custom_param_file)"/>
+	</include>
+
+<!--****************rviz  -->
+	<node name="rviz" pkg="rviz" type="rviz" args="-d $(find turtlebot_rviz_launchers)/rviz/navigation.rviz"/>
+
+<!--****************navitest , human_detection -->
+	<node pkg="navitest" name="set_location" type="set_location.py" output="screen"/>
+	<node pkg="navitest" name="navitest_2016" type="navitest_2016.py" output="screen"/>
+	<node pkg="navitest" name="speech_and_audiodetection" type="speech_and_audiodetection.py" output="screen"/>
+	<node pkg="human_detection" name="detect_human" type="detect_human.py" output="screen"/>
+
+<!--****************rospeex-->
+	<include file="$(find rospeex_launch)/launch/rospeex_local.launch" />
+	<node pkg="rospeex_audiomonitor" name="rospeex_audiomonitor" type="audio_monitor_epd" output="screen"/>
+
+<!--****************hokuyo_urg node-->
+	<node pkg="hokuyo_node" name="hokuyo" type="hokuyo_node" respawn="false" output="screen">
+		<param name="port" type="string" value="/dev/ttyACM0"/>
+		<param name="calibrate_time" type="bool" value="false"/>
+		<param name="frame_id" value="base_footprint"/>
+		<param name="intensity" type="bool" value="false"/>
+	</node>
+
+</launch>

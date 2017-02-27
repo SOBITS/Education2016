@@ -1,0 +1,5 @@
+<launch>  
+	<include file="$(find rospeex_launch)/launch/rospeex_local.launch" />
+	<node pkg="rospeex_audiomonitor" type="audio_monitor_epd" name="audio_wave" output="screen">
+	</node>
+</launch>

@@ -1,0 +1,11 @@
+#!/usr/bin/env python
+import rospy
+from std_msgs.msg import Float64
+
+def callback(value):
+	print 'check_doorOpen_node callback called'	
+	print value.data
+
+rospy.init_node('check_doorOpen')
+sub = rospy.Subscriber('judge_DoorOpen',Float64,callback)
+rospy.spin()

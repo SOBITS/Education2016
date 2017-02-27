@@ -1,0 +1,9 @@
+<launch>
+
+	<include file="$(find rospeex_launch)/launch/rospeex_local.launch" />
+
+	<node pkg="rospeex_audiomonitor" name="rospeex_audiomonitor" type="audio_monitor_epd" output="screen"/>	
+
+	<node pkg="navitest" name="navitest_2016" type="speech_and_audiodetection.py" output="screen"/>
+
+</launch>

@@ -1,0 +1,5 @@
+<launch>
+	<node pkg="restaurant" type="training_1.py" name="training_phase" output="screen"/>
+	<node pkg="restaurant" type="guide_1.py" name="guide_phase" output="screen">
+	</node>
+</launch>

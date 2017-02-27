@@ -1,0 +1,37 @@
+<launch>
+	<node name="hokuyo" pkg="hokuyo_node" type="hokuyo_node" respawn="false" output="screen">
+		<param name="calibrate_time" type="bool" value="false"/> 
+		<param name="port" type="string" value="/dev/ttyACM0"/> 
+	  	<param name="frame_id" value="base_footprint"/>
+		<param name="intensity" type="bool" value="false"/>
+  	</node>
+	
+	<arg name="custom_param_file" default="$(find turtlebot_navigation)/param/dummy.yaml"/>
+
+	<!-- Map server -->
+	<arg name="map_file" default="$(env TURTLEBOT_MAP_FILE)"/>
+	<node name="map_server" pkg="map_server" type="map_server" args="$(arg map_file)" />
+
+		<arg name="initial_pose_x" default="0.0"/> <!-- Use 17.0 for willow's map in simulation -->
+		<arg name="initial_pose_y" default="0.0"/> <!-- Use 17.0 for willow's map in simulation -->
+		<arg name="initial_pose_a" default="0.0"/>
+
+		<arg name="occupied_thresh"     value="0.7"/>
+
+	<include file="$(find turtlebot_navigation)/launch/includes/amcl.launch.xml">
+		<arg name="initial_pose_x" value="$(arg initial_pose_x)"/>
+		<arg name="initial_pose_y" value="$(arg initial_pose_y)"/>
+		<arg name="initial_pose_a" value="$(arg initial_pose_a)"/>
+	</include>
+
+	<include file="$(find turtlebot_navigation)/launch/includes/move_base.launch.xml">
+		<arg name="custom_param_file" value="$(arg custom_param_file)"/>
+	</include>
+
+	<node name="way_point" pkg="speech_recoginition_2016" type="speech_recognition.py" output="screen">
+	</node>
+
+	<node name="door_open" pkg="speech_recoginition_2016" type="door_open.py" >
+	</node>
+
+</launch>
