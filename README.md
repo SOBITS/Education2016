@@ -17,5 +17,5 @@ $ roslaunch restaurant do.launch
 - src/speech\_recognition\_2016
 
 `
-$ roslaunch speech\_recognition\_2016 do.launch
+$ roslaunch speech_recognition_2016 do.launch
 `
